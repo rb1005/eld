@@ -1909,6 +1909,7 @@ void GNULDBackend::evaluateAssignments(OutputSectionEntry *out,
 
   // Initial dot symbol value.
   dotSymbol->setValue(OutSection->addr());
+  LDSymbol::ValueType InitialDotValue = OutSection->addr();
 
   if (m_Module.getPrinter()->traceAssignments())
     config().raise(Diag::trace_output_section_addr)
@@ -2041,10 +2042,8 @@ void GNULDBackend::evaluateAssignments(OutputSectionEntry *out,
       if (fillExpression)
         getModule().setFragmentPaddingValue(F, fillExpression->result());
       offset = F->getOffset(config().getDiagEngine()) + F->size();
-      if (OutSection->isAlloc()) {
-        dotSymbol->setValue(OutSection->addr() + offset);
-        offset = dotSymbol->value() - OutSection->addr();
-      }
+      dotSymbol->setValue(OutSection->addr() + offset);
+      offset = dotSymbol->value() - OutSection->addr();
       ++Begin;
     }
     RuleContainer *NextRule =
@@ -2053,7 +2052,7 @@ void GNULDBackend::evaluateAssignments(OutputSectionEntry *out,
       if (InsertAtSectionToEnd(OutSection, offset, CurRule, NextRule,
                                fillExpression, atIndex))
         atIndex++;
-      else if (OutSection->isAlloc())
+      else
         dotSymbol->setValue(OutSection->addr() + offset);
     }
     CurRule->getSection()->setSize(offset);
@@ -2072,6 +2071,11 @@ void GNULDBackend::evaluateAssignments(OutputSectionEntry *out,
     else
       dotSymbol->setValue(OutSection->addr() + OutSection->size());
   }
+
+  // Restore dot-value if OutSection is non-alloc section.
+  // dot counter (VMA) should not change in a non-alloc section.
+  if (!OutSection->isAlloc())
+    dotSymbol->setValue(InitialDotValue);
 
   if (!(m_Module.getPrinter()->traceAssignments()))
     return;
