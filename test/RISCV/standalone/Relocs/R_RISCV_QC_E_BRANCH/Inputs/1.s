@@ -2,6 +2,8 @@
   .text
   .p2align 1
 
+  .option exact
+
 QUALCOMM:
 
 test_before_4kib:
@@ -24,7 +26,7 @@ test3:
 
   .space 0xa4, 0x0
 test_distinct:
-  nop
+  c.nop
 
 test4:
   qc.e.bltui x5, 65535, 0x0
@@ -34,4 +36,4 @@ test4:
   /* 6 bytes per qc.e.b<cmp>i, PC-relative offset is measured from start of instruction */
   .space 0x100 - 6, 0x00
 test_after_4kib:
-  nop
+  c.nop
